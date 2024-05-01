@@ -15,7 +15,6 @@
     <option name="TEMPLATE_FOLDERS">
       <list>
         <option value="$MODULE_DIR$/flaskr/templates" />
-        <option value="$MODULE_DIR$/../path-finder\templates" />
       </list>
     </option>
   </component>
