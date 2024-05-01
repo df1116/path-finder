@@ -1,3 +1,5 @@
 ﻿.venv/
 
-tmp/test.db
+__pycache__/
+
+.idea/
