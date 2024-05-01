@@ -13,7 +13,7 @@ init_db()
 @app.route('/')
 def home():
     all_gpx_files = service.get_all_gpx_files()
-    return render_template('home.html', gpx_files=all_gpx_files)
+    return render_template('templates/home.html', gpx_files=all_gpx_files)
 
 
 @app.route('/upload', methods=['POST'])
@@ -27,7 +27,7 @@ def upload_gpx():
 
 @app.route('/view/<filename>')
 def view_gpx(filename):
-    return render_template('view_gpx.html', filename=filename)
+    return render_template('templates/view_gpx.html', filename=filename)
 
 
 @app.route('/add_point/<filename>', methods=['POST'])
