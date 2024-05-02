@@ -1,14 +1,15 @@
-﻿from sqlalchemy import Any, Column, Integer, String, BLOB
-from db import Base
+﻿import sqlalchemy
+
+import db
 
 
-class Gpx(Base):
+class Gpx(db.Base):
     __tablename__ = 'gpx'
-    id = Column(Integer, primary_key=True)
-    name = Column(String, unique=False)
-    data = Column(BLOB)
+    id = sqlalchemy.Column(sqlalchemy.Integer, primary_key=True)
+    name = sqlalchemy.Column(sqlalchemy.String, unique=False)
+    data = sqlalchemy.Column(sqlalchemy.BLOB)
 
-    def __init__(self, name=None, data=None, **kw: Any):
+    def __init__(self, name=None, data=None, **kw: sqlalchemy.Any):
         super().__init__(**kw)
         self.name = name
         self.data = data
