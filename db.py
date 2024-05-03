@@ -1,4 +1,4 @@
-﻿import sqlalchemy
+﻿import sqlalchemy.orm
 
 engine = sqlalchemy.create_engine('sqlite:///tmp/test.db')
 db_session = sqlalchemy.orm.scoped_session(sqlalchemy.orm.sessionmaker(autocommit=False,

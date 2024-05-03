@@ -1,7 +1,6 @@
-﻿import requests
-import flask
-import gpxpy
+﻿import flask
 
+import helper
 import service
 import db
 
@@ -35,45 +34,36 @@ def view_gpx(filename):
 
 @app.route('/add_point/<filename>', methods=['POST'])
 def add_point(filename):
-    """Add a point to an existing GPX file and route it along real roads or paths."""
+    longitude = float(flask.request.form["longitude"])
+    latitude = float(flask.request.form["latitude"])
+
     gpx_file = service.get_gpx_file(filename)
-    try:
-        gpx = gpxpy.parse(gpx_file.data)
-    except Exception as e:
-        app.logger.error(f"Error parsing GPX data: {str(e)}")
-        return 'Failed to parse GPX file', 400
+    gpx = helper.parse_gpx(gpx_file.data)
 
-    try:
-        longitude = float(flask.request.form["longitude"])
-        latitude = float(flask.request.form["latitude"])
-    except ValueError:
-        return 'Invalid latitude or longitude', 400
+    if len(gpx.routes) > 0:
+        start_point = gpx.routes[-1].points[-1]
+    else:
+        start_point = gpx.tracks[0].segments[0].points[-1]
 
-    # Using the OpenRouteService API to get the route
-    api_url = 'https://api.openrouteservice.org/v2/directions/foot-hiking/gpx'
-    headers = {
-        'Authorization': '5b3ce3597851110001cf6248488e0d1ffe854d10ba214b419ba561d0',
-        'Content-Type': 'application/json'
-    }
-    end_point = gpx.tracks[0].segments[0].points[-1]
-    body = {
-        'coordinates': [
-            [end_point.longitude, end_point.latitude],
-            [longitude, latitude]
-        ]
-    }
+    route_gpx = helper.get_route(start_point.longitude, start_point.latitude, longitude, latitude)
 
-    try:
-        response = requests.post(api_url, headers=headers, json=body)
-        response.raise_for_status()
-        route_gpx = gpxpy.parse(response.text)
-        gpx.routes.append(route_gpx.routes[0])
-    except requests.exceptions.RequestException as e:
-        app.logger.error(f"Failed to get route from API: {str(e)}")
-        return f"API call failed: {str(e)}", 500
+    gpx.routes.append(route_gpx.routes[0])
+    service.update_gpx_file(gpx_file, gpx)
 
-    gpx_file.data = gpx.to_xml().encode('utf-8')
-    db.db_session.commit()
+    return flask.redirect(flask.url_for('view_gpx', filename=filename))
+
+
+@app.route('/remove_point/<filename>', methods=['POST'])
+def remove_point(filename):
+    longitude = float(flask.request.form["longitude"])
+    latitude = float(flask.request.form["latitude"])
+
+    gpx_file = service.get_gpx_file(filename)
+    gpx = helper.parse_gpx(gpx_file.data)
+
+    modified_gpx = helper.process_point_removal(gpx, longitude, latitude)
+
+    service.update_gpx_file(gpx_file, modified_gpx)
 
     return flask.redirect(flask.url_for('view_gpx', filename=filename))
 
