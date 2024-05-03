@@ -1,6 +1,6 @@
 ﻿import sqlalchemy.orm
 
-engine = sqlalchemy.create_engine('sqlite:///tmp/test.db')
+engine = sqlalchemy.create_engine('sqlite:///test.db')
 db_session = sqlalchemy.orm.scoped_session(sqlalchemy.orm.sessionmaker(autocommit=False,
                                                                        autoflush=False,
                                                                        bind=engine))

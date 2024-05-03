@@ -1,7 +1,5 @@
 ﻿# Path Finder
 
-![img.png](img.png)
-
 ## Overview
 
 This GPX File Management System is a Flask-based web application designed to upload, display, and manage GPX files. Users can upload GPX files, view them on a map, add or remove points, and download or delete the files.
