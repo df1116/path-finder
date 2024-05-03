@@ -82,17 +82,72 @@
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '© OpenStreetMap contributors'
     }).addTo(map);
-    var gpx =  '{{ url_for("download_gpx", filename=filename) }}';
-    new L.GPX(gpx, {
+
+    var gpx = '{{ url_for("download_gpx", filename=filename) }}';
+    var gpxLayer = new L.GPX(gpx, {
         async: true,
         marker_options: {
             startIconUrl: 'https://cdn.jsdelivr.net/npm/leaflet-gpx@1.7.0/pin-icon-start.png',
             endIconUrl: 'https://cdn.jsdelivr.net/npm/leaflet-gpx@1.7.0/pin-icon-end.png',
-            shadowUrl: 'https://cdn.jsdelivr.net/npm/leaflet-gpx@1.7.0/pin-shadow.png'
+            shadowUrl: 'https://cdn.jsdelivr.net/npm/leaflet-gpx@1.7.0/pin-shadow.png',
+            clickable: true
         }
     }).on('loaded', function(e) {
         map.fitBounds(e.target.getBounds());
     }).addTo(map);
+
+    // Function to create a form and submit it
+    function submitForm(act, lat, lon) {
+        var form = document.createElement('form');
+        form.style.display = 'none'; // Hide the form
+        form.method = 'POST';
+        form.action = '/' + act + '/' + encodeURIComponent('{{ filename }}'); // Construct the action dynamically
+
+        var latInput = document.createElement('input');
+        latInput.type = 'hidden';
+        latInput.name = 'latitude';
+        latInput.value = lat;
+        form.appendChild(latInput);
+
+        var lonInput = document.createElement('input');
+        lonInput.type = 'hidden';
+        lonInput.name = 'longitude';
+        lonInput.value = lon;
+        form.appendChild(lonInput);
+
+        document.body.appendChild(form);
+        form.submit();
+    }
+
+    // Handle marker click events
+    gpxLayer.on('click', function(e) {
+        var marker = e.layer;
+        var position = marker.getLatLng();
+        var lat = position.lat.toFixed(6);
+        var lon = position.lng.toFixed(6);
+        var popupContent = '<form onsubmit="submitForm(\'remove_point\', ' + lat + ', ' + lon + '); return false;">' +
+            '<label>Latitude: ' + lat + '</label><br>' +
+            '<label>Longitude: ' + lon + '</label><br>' +
+            '<input type="submit" value="Remove Point">' +
+            '</form>';
+        marker.bindPopup(popupContent).openPopup();
+    });
+    
+    // Map click to show form in popup
+    map.on('click', function(e) {
+        var lat = e.latlng.lat.toFixed(6);
+        var lon = e.latlng.lng.toFixed(6);
+        var popupContent = '<form onsubmit="submitForm(\'add_point\', ' + lat + ', ' + lon + '); return false;">' +
+            '<label>Latitude: ' + lat + '</label><br>' +
+            '<label>Longitude: ' + lon + '</label><br>' +
+            '<input type="submit" value="Add Point">' +
+            '</form>';
+
+        L.popup()
+            .setLatLng(e.latlng)
+            .setContent(popupContent)
+            .openOn(map);
+    });
 </script>
 </body>
 </html>
