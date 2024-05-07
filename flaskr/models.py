@@ -1,15 +1,15 @@
-﻿import sqlalchemy
+﻿from sqlalchemy import Any, BLOB, Column, Integer, String
 
-import db
+from flaskr.db import Base
 
 
-class Gpx(db.Base):
+class Gpx(Base):
     __tablename__ = 'gpx'
-    id = sqlalchemy.Column(sqlalchemy.Integer, primary_key=True)
-    name = sqlalchemy.Column(sqlalchemy.String, unique=False)
-    data = sqlalchemy.Column(sqlalchemy.BLOB)
+    id = Column(Integer, primary_key=True)
+    name = Column(String, unique=False)
+    data = Column(BLOB)
 
-    def __init__(self, name=None, data=None, **kw: sqlalchemy.Any):
+    def __init__(self, name=None, data=None, **kw: Any):
         super().__init__(**kw)
         self.name = name
         self.data = data

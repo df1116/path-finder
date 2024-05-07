@@ -1,10 +1,10 @@
-﻿import gpxpy
-import requests
+﻿from gpxpy import parse
+from requests import exceptions, post
 
 
 def parse_gpx(gpx_raw):
     try:
-        gpx = gpxpy.parse(gpx_raw)
+        gpx = parse(gpx_raw)
     except Exception as e:
         return f"Failed to parse GPX file: {str(e)}", 400
 
@@ -13,9 +13,9 @@ def parse_gpx(gpx_raw):
 
 def http_post(api_url, headers, body):
     try:
-        response = requests.post(api_url, headers=headers, json=body)
+        response = post(api_url, headers=headers, json=body)
         response.raise_for_status()
-    except requests.exceptions.RequestException as e:
+    except exceptions.RequestException as e:
         return f"API call failed: {str(e)}", 500
 
     return response
