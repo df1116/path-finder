@@ -2,26 +2,31 @@
 from requests import exceptions, post
 
 
-def parse_gpx(gpx_raw):
+def is_valid_gpx_file(file) -> bool:
+    """Check if the file is a GPX file based on its filename."""
+    return file.filename.endswith('.gpx')
+
+
+def parse_gpx(gpx_raw: str):
+    """Parse raw GPX data into a GPX object."""
     try:
-        gpx = parse(gpx_raw)
+        return parse(gpx_raw)
     except Exception as e:
-        return f"Failed to parse GPX file: {str(e)}", 400
-
-    return gpx
+        return ValueError(f"Failed to parse GPX file: {e}")
 
 
-def http_post(api_url, headers, body):
+def http_post(api_url: str, headers: dict, body: dict):
+    """Perform an HTTP POST request and return the response object."""
     try:
         response = post(api_url, headers=headers, json=body)
         response.raise_for_status()
+        return response
     except exceptions.RequestException as e:
-        return f"API call failed: {str(e)}", 500
-
-    return response
+        raise ConnectionError(f"API call failed: {e}")
 
 
-def get_route(long1, lat1, long2, lat2):
+def get_route(long1: float, lat1: float, long2: float, lat2: float):
+    """Gets a route between two points using OpenRouteService."""
     api_url = 'https://api.openrouteservice.org/v2/directions/foot-hiking/gpx'
     headers = {
         'Authorization': '5b3ce3597851110001cf6248488e0d1ffe854d10ba214b419ba561d0',
@@ -38,6 +43,7 @@ def get_route(long1, lat1, long2, lat2):
 
 
 def process_point_removal(gpx, longitude, latitude):
+    """Removes a point from GPX file."""
     route_start_idx, route_end_idx = find_routes_by_point(gpx, longitude, latitude)
 
     if route_start_idx == -1:
@@ -51,6 +57,7 @@ def process_point_removal(gpx, longitude, latitude):
 
 
 def find_routes_by_point(gpx, longitude, latitude):
+    """Find indices of routes in a GPX that start or end with a given point."""
     route_start_with = -1
     route_end_with = -1
     for i, route in enumerate(gpx.routes):
@@ -63,11 +70,12 @@ def find_routes_by_point(gpx, longitude, latitude):
 
 
 def points_match(long1, long2, lat1, lat2):
-    return (abs(long1 - long2) <= 0.00001 and
-            abs(lat1 - lat2) <= 0.00001)
+    """Check if two geographical points are approximately equal."""
+    return abs(long1 - long2) <= 0.00001 and abs(lat1 - lat2) <= 0.00001
 
 
 def merge_routes(gpx, start_idx, end_idx):
+    """Merge two routes in a GPX file and update the GPX routes list."""
     start_point = gpx.routes[end_idx].points[0]
     end_point = gpx.routes[start_idx].points[-1]
     route_gpx = get_route(start_point.longitude, start_point.latitude, end_point.longitude, end_point.latitude)

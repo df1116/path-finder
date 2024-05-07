@@ -4,15 +4,17 @@ from flaskr.db import Base
 
 
 class Gpx(Base):
+    """
+    Represents a GPX file entity storing GPS data.
+    """
     __tablename__ = 'gpx'
+
     id = Column(Integer, primary_key=True)
-    name = Column(String, unique=False)
+    name = Column(String(255))
     data = Column(BLOB)
 
-    def __init__(self, name=None, data=None, **kw: Any):
-        super().__init__(**kw)
-        self.name = name
-        self.data = data
-
     def __repr__(self):
-        return f'<{self.name!r}>'
+        """
+        Return a formal string representation of the GPX object.
+        """
+        return f"<Gpx(name={self.name!r}, id={self.id})>"

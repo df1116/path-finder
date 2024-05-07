@@ -2,10 +2,10 @@
 
 from flaskr.helper import parse_gpx, get_route, process_point_removal
 from flaskr.service import upload_gpx_file, get_gpx_file, get_all_gpx_files, update_gpx_file, delete_gpx_file
-from flaskr.db import db_session, init_db
+from flaskr.db import init_db, shutdown_session
+
 
 app = Flask(__name__)
-
 init_db()
 
 
@@ -34,6 +34,7 @@ def view_gpx(filename):
 
 @app.route('/add_point/<filename>', methods=['POST'])
 def add_point(filename):
+    """Add a point to a GPX file and save it."""
     longitude = float(request.form["longitude"])
     latitude = float(request.form["latitude"])
 
@@ -55,6 +56,7 @@ def add_point(filename):
 
 @app.route('/remove_point/<filename>', methods=['POST'])
 def remove_point(filename):
+    """Remove a point to a GPX file and save it."""
     longitude = float(request.form["longitude"])
     latitude = float(request.form["latitude"])
 
@@ -89,9 +91,9 @@ def download_gpx(filename):
 
 
 @app.teardown_appcontext
-def shutdown_session(exception=None):
+def teardown(exception=None):
     """Remove database session at the end of the request or when app shuts down."""
-    db_session.remove()
+    shutdown_session()
 
 
 if __name__ == '__main__':

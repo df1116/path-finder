@@ -40,7 +40,7 @@ Ensure you have Python installed on your machine. The application has been teste
 
 To run the application, use the following command:
 ```bash
-python app.py
+python -m flaskr.app
 ```
 
 The application will start running on `http://localhost:5000`. Navigate to this URL in your web browser to start using the GPX File Management System.
