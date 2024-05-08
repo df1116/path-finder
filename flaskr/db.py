@@ -13,12 +13,12 @@ def create_engine(db_url):
 engine = create_engine('sqlite:///test.db')
 
 
-def create_db_session():
-    session_factory = sessionmaker(bind=engine, autocommit=False, autoflush=False)
+def create_db_session(e):
+    session_factory = sessionmaker(bind=e, autocommit=False, autoflush=False)
     return scoped_session(session_factory)
 
 
-db_session = create_db_session()
+db_session = create_db_session(engine)
 Base.query = db_session.query_property()
 
 
