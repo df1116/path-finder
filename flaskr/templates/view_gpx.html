@@ -1,152 +1,27 @@
 ﻿<!DOCTYPE html>
 <html lang="en">
 <head>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/leaflet.css" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>View GPX Data</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 20px;
-            background-color: #f4f4f9;
-            color: #333;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            min-height: 100vh;
-        }
-        h1 {
-            margin: 20px 0;
-        }
-        #map {
-            width: 800px;
-            height: 600px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
-        }
-        a.button {
-            background-color: #007BFF;
-            color: white;
-            padding: 10px 20px;
-            text-decoration: none;
-            border-radius: 5px;
-            margin-top: 10px;
-        }
-        a.button:hover {
-            background-color: #0056b3;
-        }
-        form {
-            margin-top: 20px;
-        }
-        input[type="text"] {
-            padding: 8px;
-            margin: 5px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-        }
-        input[type="submit"] {
-            background-color: #007BFF;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            text-align: center;
-            text-decoration: none;
-            display: inline-block;
-            font-size: 16px;
-            margin: 5px 0;
-            cursor: pointer;
-            border-radius: 5px;
-        }
-        input[type="submit"]:hover {
-            background-color: #0056b3;
-        }
-    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/leaflet.css">
+    <link rel="stylesheet" href="https://unpkg.com/@raruto/leaflet-elevation/dist/leaflet-elevation.css">
+    <link rel="stylesheet" href="../static/view_gpx.css">
 </head>
 <body>
-<h1>{{ filename[:-4] }}</h1>
+<header>
+    <h1>{{ filename[:-4] }}</h1>
+    <a href="{{ url_for('home') }}" class="button">Return</a>
+</header>
 <div id="map"></div>
-<a href="{{ url_for('home') }}" class="button">Return</a>
-<form action="{{ url_for('add_point', filename=filename) }}" method="post">
-    <label>
-        <input type="number" step="0.00001" name="latitude" placeholder="Latitude" required>
-    </label>
-    <label>
-        <input type="number" step="0.00001" name="longitude" placeholder="Longitude" required>
-    </label>
-    <input type="submit" value="Add Point">
-</form>
+<div id="elevation-chart"></div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/leaflet.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet-gpx/1.7.0/gpx.min.js"></script>
+<script src="https://unpkg.com/@raruto/leaflet-elevation/dist/leaflet-elevation.js"></script>
+<script src="../static/view_gpx.js"></script>
 <script>
-    var map = L.map('map').setView([51.505, -0.09], 13);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '© OpenStreetMap contributors'
-    }).addTo(map);
-
-    var gpx = '{{ url_for("download_gpx", filename=filename) }}';
-    var gpxLayer = new L.GPX(gpx, {
-        async: true,
-        marker_options: {
-            startIconUrl: 'https://cdn.jsdelivr.net/npm/leaflet-gpx@1.7.0/pin-icon-start.png',
-            endIconUrl: 'https://cdn.jsdelivr.net/npm/leaflet-gpx@1.7.0/pin-icon-end.png',
-            shadowUrl: 'https://cdn.jsdelivr.net/npm/leaflet-gpx@1.7.0/pin-shadow.png',
-            clickable: true
-        }
-    }).on('loaded', function(e) {
-        map.fitBounds(e.target.getBounds());
-    }).addTo(map);
-
-    // Function to create a form and submit it
-    function submitForm(act, lat, lon) {
-        var form = document.createElement('form');
-        form.style.display = 'none'; // Hide the form
-        form.method = 'POST';
-        form.action = '/' + act + '/' + encodeURIComponent('{{ filename }}'); // Construct the action dynamically
-
-        var latInput = document.createElement('input');
-        latInput.type = 'hidden';
-        latInput.name = 'latitude';
-        latInput.value = lat;
-        form.appendChild(latInput);
-
-        var lonInput = document.createElement('input');
-        lonInput.type = 'hidden';
-        lonInput.name = 'longitude';
-        lonInput.value = lon;
-        form.appendChild(lonInput);
-
-        document.body.appendChild(form);
-        form.submit();
-    }
-
-    // Handle marker click events
-    gpxLayer.on('click', function(e) {
-        var marker = e.layer;
-        var position = marker.getLatLng();
-        var lat = position.lat.toFixed(6);
-        var lon = position.lng.toFixed(6);
-        var popupContent = '<form onsubmit="submitForm(\'remove_point\', ' + lat + ', ' + lon + '); return false;">' +
-            '<label>Latitude: ' + lat + '</label><br>' +
-            '<label>Longitude: ' + lon + '</label><br>' +
-            '<input type="submit" value="Remove Point">' +
-            '</form>';
-        marker.bindPopup(popupContent).openPopup();
-    });
-    
-    // Map click to show form in popup
-    map.on('click', function(e) {
-        var lat = e.latlng.lat.toFixed(6);
-        var lon = e.latlng.lng.toFixed(6);
-        var popupContent = '<form onsubmit="submitForm(\'add_point\', ' + lat + ', ' + lon + '); return false;">' +
-            '<label>Latitude: ' + lat + '</label><br>' +
-            '<label>Longitude: ' + lon + '</label><br>' +
-            '<input type="submit" value="Add Point">' +
-            '</form>';
-
-        L.popup()
-            .setLatLng(e.latlng)
-            .setContent(popupContent)
-            .openOn(map);
+    document.addEventListener('DOMContentLoaded', function() {
+        initializeMap('{{ filename }}');
     });
 </script>
 </body>

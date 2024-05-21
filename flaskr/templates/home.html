@@ -2,100 +2,28 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>View and Manage GPX Files</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 20px;
-            background-color: #f4f4f9;
-            color: #333;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-        }
-        .container {
-            width: 80%;
-            max-width: 600px; /* Adjust this value to change the max width */
-            text-align: center;
-        }
-        h1 {
-            color: #333;
-        }
-        ul {
-            list-style-type: none; /* Removes default list styling */
-            padding: 0;
-        }
-        li {
-            background-color: #fff;
-            border: 1px solid #ddd;
-            padding: 10px 15px;
-            border-radius: 5px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-            margin-bottom: 10px; /* Adds space below each file's list item */
-        }
-        form, a {
-            margin-right: 10px; /* Adds space between the form and links */
-            text-decoration: none;
-            color: #007BFF;
-        }
-        a:hover {
-            text-decoration: underline;
-        }
-        form {
-            display: inline; /* Allows elements to be on the same line */
-        }
-        input[type="text"], input[type="file"] {
-            padding: 8px;
-            margin: 5px 0;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-        }
-        button, input[type="submit"] {
-            background-color: #007BFF;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            text-align: center;
-            text-decoration: none;
-            display: inline-block;
-            font-size: 16px;
-            margin: 5px 0;
-            cursor: pointer;
-            border-radius: 5px;
-        }
-        button:hover, input[type="submit"]:hover {
-            background-color: #0056b3;
-        }
-    </style>
+    <title>Path Finder</title>
+    <link rel="stylesheet" href="../static/home.css">
 </head>
 <body>
 <div class="container">
-    <h1>Upload GPX File</h1>
+    <header>
+        <h1>Path Finder</h1>
+    </header>
     <form action="{{ url_for('upload_gpx') }}" method="post" enctype="multipart/form-data">
         <input type="file" name="file" required>
         <button type="submit">Upload</button>
     </form>
-    <h1>GPX Files</h1>
+    <h2>GPX Files</h2>
     <ul>
         {% for file in gpx_files %}
-            <li>
-                <h2>{{ file.name[:-4] }}</h2>
-                <ul>
-                    <li>
-                        <!-- Download link -->
-                        <a href="{{ url_for('view_gpx', filename=file.name) }}">View</a>
-                    </li>
-                    <li>
-                        <!-- Download link -->
-                        <a href="{{ url_for('download_gpx', filename=file.name) }}">Download</a>
-                    </li>
-                    <li>
-                        <!-- Link to delete the file -->
-                        <a href="{{ url_for('delete_gpx', filename=file.name) }}" onclick="return confirm('Are you sure you want to delete this file?');">Delete</a>
-                    </li>
-                </ul>
+            <li class="file-item">
+                <span class="file-name">{{ file.name[:-4] }}</span>
+                <div class="file-actions">
+                    <a href="{{ url_for('view_gpx', filename=file.name) }}" class="action-button">View</a>
+                    <a href="{{ url_for('download_gpx', filename=file.name) }}" class="action-button">Download</a>
+                    <a href="{{ url_for('delete_gpx', filename=file.name) }}" class="action-button" onclick="return confirm('Are you sure you want to delete this file?');">Delete</a>
+                </div>
             </li>
         {% endfor %}
     </ul>
