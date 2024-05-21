@@ -1,6 +1,6 @@
 ﻿from flask import Flask, render_template, Response, request, redirect, url_for
 
-from flaskr.helper import parse_gpx, get_route, process_point_removal
+from flaskr.helper import parse_gpx, process_add_point, process_append_point, process_move_point, process_remove_point
 from flaskr.service import upload_gpx_file, get_gpx_file, get_all_gpx_files, update_gpx_file, delete_gpx_file
 from flaskr.db import init_db, shutdown_session
 
@@ -32,23 +32,46 @@ def view_gpx(filename):
     return render_template('view_gpx.html', filename=filename)
 
 
-@app.route('/add_point/<filename>', methods=['POST'])
-def add_point(filename):
-    """Add a point to a GPX file and save it."""
+def handle_point_action(filename, process_function):
+    """Handle actions related to GPX points."""
     longitude = float(request.form["longitude"])
     latitude = float(request.form["latitude"])
 
     gpx_file = get_gpx_file(filename)
     gpx = parse_gpx(gpx_file.data)
 
-    if len(gpx.routes) > 0:
-        start_point = gpx.routes[-1].points[-1]
-    else:
-        start_point = gpx.tracks[0].segments[0].points[-1]
+    process_function(gpx, longitude, latitude)
 
-    route_gpx = get_route(start_point.longitude, start_point.latitude, longitude, latitude)
+    update_gpx_file(gpx_file, gpx)
 
-    gpx.routes.append(route_gpx.routes[0])
+    return redirect(url_for('view_gpx', filename=filename))
+
+
+@app.route('/add_point/<filename>', methods=['POST'])
+def add_point(filename):
+    """Add a point to a GPX file and save it."""
+    return handle_point_action(filename, process_add_point)
+
+
+@app.route('/append_point/<filename>', methods=['POST'])
+def append_point(filename):
+    """Append a point to a GPX file and save it."""
+    return handle_point_action(filename, process_append_point)
+
+
+@app.route('/move_point/<filename>', methods=['POST'])
+def move_point(filename):
+    """Add a point to a GPX file and save it."""
+    longitude = float(request.form["longitude"])
+    latitude = float(request.form["latitude"])
+    new_longitude = float(request.form["new_longitude"])
+    new_latitude = float(request.form["new_latitude"])
+
+    gpx_file = get_gpx_file(filename)
+    gpx = parse_gpx(gpx_file.data)
+
+    process_move_point(gpx, longitude, latitude, new_longitude, new_latitude)
+
     update_gpx_file(gpx_file, gpx)
 
     return redirect(url_for('view_gpx', filename=filename))
@@ -56,25 +79,15 @@ def add_point(filename):
 
 @app.route('/remove_point/<filename>', methods=['POST'])
 def remove_point(filename):
-    """Remove a point to a GPX file and save it."""
-    longitude = float(request.form["longitude"])
-    latitude = float(request.form["latitude"])
-
-    gpx_file = get_gpx_file(filename)
-    gpx = parse_gpx(gpx_file.data)
-
-    modified_gpx = process_point_removal(gpx, longitude, latitude)
-
-    update_gpx_file(gpx_file, modified_gpx)
-
-    return redirect(url_for('view_gpx', filename=filename))
+    """Remove a point from a GPX file and save it."""
+    return handle_point_action(filename, process_remove_point)
 
 
 @app.route('/delete/<filename>')
 def delete_gpx(filename):
     """Delete a GPX file."""
     delete_gpx_file(filename)
-    return redirect(url_for('home'))
+    return redirect(url_for('home')), 204
 
 
 @app.route('/downloads/<filename>')

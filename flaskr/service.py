@@ -1,5 +1,5 @@
 ﻿from flaskr.db import db_add, db_commit, db_delete
-from flaskr.helper import is_valid_gpx_file
+from flaskr.helper import is_valid_gpx_file, parse_gpx, standardise_gpx
 from flaskr.models import Gpx
 
 
@@ -10,9 +10,13 @@ def upload_gpx_file(file):
 
     filename = file.filename
     data = file.read()
-    gpx = Gpx(name=filename, data=data)
 
-    db_add(gpx)
+    gpx = parse_gpx(data)
+    standardise_gpx(gpx)
+
+    gpx_to_add = Gpx(name=filename, data=gpx.to_xml().encode('utf-8'))
+
+    db_add(gpx_to_add)
     db_commit()
 
 
