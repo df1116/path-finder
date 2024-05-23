@@ -1,1 +1,1 @@
-﻿openrouteservice_api_key = '5b3ce3597851110001cf6248488e0d1ffe854d10ba214b419ba561d0'
+﻿openrouteservice_api_key = '<your-api-key>'
