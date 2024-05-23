@@ -3,7 +3,7 @@ from flaskr.helper import is_valid_gpx_file, parse_gpx, standardise_gpx
 from flaskr.models import Gpx
 
 
-def upload_gpx_file(file):
+def upload_gpx_file(profile, file):
     """Upload a new GPX file to the database."""
     if not is_valid_gpx_file(file):
         raise ValueError("Unsupported file format")
@@ -14,7 +14,7 @@ def upload_gpx_file(file):
     gpx = parse_gpx(data)
     standardise_gpx(gpx)
 
-    gpx_to_add = Gpx(name=filename, data=gpx.to_xml().encode('utf-8'))
+    gpx_to_add = Gpx(name=filename, profile=profile, data=gpx.to_xml().encode('utf-8'))
 
     db_add(gpx_to_add)
     db_commit()
@@ -22,7 +22,10 @@ def upload_gpx_file(file):
 
 def get_gpx_file(filename):
     """Retrieve a GPX file by its name from the database."""
-    return Gpx.query.filter_by(name=filename).first()
+    gpx_file = Gpx.query.filter_by(name=filename).first()
+    if not gpx_file:
+        raise FileNotFoundError(f"GPX file '{filename}' not found")
+    return gpx_file
 
 
 def get_all_gpx_files():
@@ -30,16 +33,17 @@ def get_all_gpx_files():
     return Gpx.query.all()
 
 
-def update_gpx_file(gpx_file, new_gpx):
+def update_gpx_file(gpx_file, new_gpx=None, new_profile=None):
     """Update a GPX file in the database with new data."""
-    gpx_file.data = new_gpx.to_xml().encode('utf-8')
+    if new_profile:
+        gpx_file.profile = new_profile
+    if new_gpx:
+        gpx_file.data = new_gpx.to_xml().encode('utf-8')
     db_commit()
 
 
 def delete_gpx_file(filename):
     """Delete a GPX file from the database by its filename."""
     gpx = get_gpx_file(filename)
-    if not gpx:
-        raise FileNotFoundError("File not found")
     db_delete(gpx)
     db_commit()

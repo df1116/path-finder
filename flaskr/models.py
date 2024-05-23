@@ -11,6 +11,7 @@ class Gpx(Base):
 
     id = Column(Integer, primary_key=True)
     name = Column(String(255))
+    profile = Column(String(255))
     data = Column(BLOB)
 
     def __repr__(self):

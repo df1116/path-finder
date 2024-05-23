@@ -1,6 +1,7 @@
 ﻿from flask import Flask, render_template, Response, request, redirect, url_for
 
-from flaskr.helper import parse_gpx, process_add_point, process_append_point, process_move_point, process_remove_point
+from flaskr.helper import (parse_gpx, process_add_point, process_append_point, process_move_point, process_remove_point,
+                           process_update_profile)
 from flaskr.service import upload_gpx_file, get_gpx_file, get_all_gpx_files, update_gpx_file, delete_gpx_file
 from flaskr.db import init_db, shutdown_session
 
@@ -19,17 +20,18 @@ def home():
 @app.route('/upload', methods=['POST'])
 def upload_gpx():
     """Upload a GPX file and save it."""
+    profile = request.form.get('profile')
     file = request.files.get('file')
     if file and file.filename.endswith('.gpx'):
-        upload_gpx_file(file)
+        upload_gpx_file(profile, file)
         return redirect(url_for('home'))
     return 'Invalid file', 400
 
 
-@app.route('/view/<filename>')
-def view_gpx(filename):
+@app.route('/view/<filename>/<profile>')
+def view_gpx(filename, profile):
     """Display a specific GPX file."""
-    return render_template('view_gpx.html', filename=filename)
+    return render_template('view_gpx.html', filename=filename, profile=profile)
 
 
 def handle_point_action(filename, process_function):
@@ -40,11 +42,11 @@ def handle_point_action(filename, process_function):
     gpx_file = get_gpx_file(filename)
     gpx = parse_gpx(gpx_file.data)
 
-    process_function(gpx, longitude, latitude)
+    process_function(gpx, gpx_file.profile, longitude, latitude)
 
     update_gpx_file(gpx_file, gpx)
 
-    return redirect(url_for('view_gpx', filename=filename))
+    return redirect(url_for('view_gpx', filename=filename, profile=gpx_file.profile))
 
 
 @app.route('/add_point/<filename>', methods=['POST'])
@@ -70,11 +72,11 @@ def move_point(filename):
     gpx_file = get_gpx_file(filename)
     gpx = parse_gpx(gpx_file.data)
 
-    process_move_point(gpx, longitude, latitude, new_longitude, new_latitude)
+    process_move_point(gpx, gpx_file.profile, longitude, latitude, new_longitude, new_latitude)
 
     update_gpx_file(gpx_file, gpx)
 
-    return redirect(url_for('view_gpx', filename=filename))
+    return redirect(url_for('view_gpx', filename=filename, profile=gpx_file.profile))
 
 
 @app.route('/remove_point/<filename>', methods=['POST'])
@@ -87,7 +89,22 @@ def remove_point(filename):
 def delete_gpx(filename):
     """Delete a GPX file."""
     delete_gpx_file(filename)
-    return redirect(url_for('home')), 204
+    return redirect(url_for('home'))
+
+
+@app.route('/update_profile/<filename>', methods=['POST'])
+def update_profile(filename):
+    """Update the profile of a gpx route."""
+    profile = request.form.get('profile')
+
+    gpx_file = get_gpx_file(filename)
+    gpx = parse_gpx(gpx_file.data)
+
+    process_update_profile(gpx, profile)
+
+    update_gpx_file(gpx_file, new_gpx=gpx, new_profile=profile)
+
+    return redirect(url_for('view_gpx', filename=filename, profile=gpx_file.profile))
 
 
 @app.route('/downloads/<filename>')
