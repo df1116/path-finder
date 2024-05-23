@@ -6,11 +6,23 @@
     <title>View GPX Data</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/leaflet.css">
     <link rel="stylesheet" href="https://unpkg.com/@raruto/leaflet-elevation/dist/leaflet-elevation.css">
-    <link rel="stylesheet" href="../static/view_gpx.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='view_gpx.css') }}">
 </head>
 <body>
 <header>
     <h1>{{ filename[:-4] }}</h1>
+    <form action="{{ url_for('update_profile', filename=filename) }}" method="post" enctype="multipart/form-data">
+        <label>
+            <select name="profile" required>
+                <option value="foot-hiking" {% if profile == 'foot-hiking' %}selected{% endif %}>Hiking</option>
+                <option value="foot-walking" {% if profile == 'foot-walking' %}selected{% endif %}>Walking</option>
+                <option value="cycling-regular" {% if profile == 'cycling-regular' %}selected{% endif %}>Cycling</option>
+                <option value="cycling-road" {% if profile == 'cycling-road' %}selected{% endif %}>Road Cycling</option>
+                <option value="cycling-mountain" {% if profile == 'cycling-mountain' %}selected{% endif %}>Mountain Biking</option>
+            </select>
+        </label>
+        <button type="submit">Change Profile</button>
+    </form>
     <a href="{{ url_for('home') }}" class="button">Return</a>
 </header>
 <div id="map"></div>
@@ -18,7 +30,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/leaflet.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet-gpx/1.7.0/gpx.min.js"></script>
 <script src="https://unpkg.com/@raruto/leaflet-elevation/dist/leaflet-elevation.js"></script>
-<script src="../static/view_gpx.js"></script>
+<script src="{{ url_for('static', filename='view_gpx.js') }}"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         initializeMap('{{ filename }}');

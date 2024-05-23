@@ -4,7 +4,11 @@
         attribution: '© OpenStreetMap contributors'
     }).addTo(map);
 
-    let elevation_options = {
+    if (!filename) {
+        return; // Draw the map without GPX data if filename is null or empty
+    }
+
+    let elevationOptions = {
         theme: "lime-theme",
         detached: true,
         elevationDiv: "#elevation-div",
@@ -34,8 +38,7 @@
         height: 200
     };
 
-    let controlElevation = L.control.elevation(elevation_options).addTo(map);
-
+    let controlElevation = L.control.elevation(elevationOptions).addTo(map);
     let gpx = `/downloads/${encodeURIComponent(filename)}`;
     let gpxLayer = new L.GPX(gpx, {
         async: true,
@@ -49,7 +52,6 @@
     }).on('loaded', function(e) {
         map.fitBounds(e.target.getBounds());
 
-        // Number the waypoints
         let waypoints = e.target.getLayers()[0].getLayers().filter(layer => layer.options.type === "waypoint");
         waypoints.forEach((waypoint, index) => {
             let number = index + 1;
@@ -60,7 +62,6 @@
         controlElevation.load(gpxLayer);
     }).addTo(map);
 
-    // Handle marker click and drag events
     gpxLayer.on('click', function(e) {
         let marker = e.layer;
         marker.dragging.enable();
@@ -71,7 +72,6 @@
         handleMarker(filename, marker);
     });
 
-    // Handle map click events
     map.on('click', function(event) {
         handleMap(filename, event, map);
     });
@@ -79,16 +79,15 @@
     gpxLayer.on("addline", function(e) {
         controlElevation.addData(e.line);
     });
-
 }
 
 function handleMarker(filename, marker) {
     let originalPosition;
-    marker.on('dragstart', function(_) {
+    marker.on('dragstart', function() {
         originalPosition = marker.getLatLng();
     });
 
-    marker.on('dragend', function(_) {
+    marker.on('dragend', function() {
         let position = marker.getLatLng();
         let latitude = originalPosition.lat.toFixed(6);
         let longitude = originalPosition.lng.toFixed(6);
@@ -128,12 +127,8 @@ function reverseGeocode(latlng, callback) {
 function createPopupContent(action, filename, position, newPosition = null) {
     let latitude = position.lat.toFixed(6);
     let longitude = position.lng.toFixed(6);
-    let newLatitude = null;
-    let newLongitude = null;
-    if (newPosition != null) {
-        newLatitude = newPosition.lat.toFixed(6);
-        newLongitude = newPosition.lng.toFixed(6);
-    }
+    let newLatitude = newPosition ? newPosition.lat.toFixed(6) : null;
+    let newLongitude = newPosition ? newPosition.lng.toFixed(6) : null;
 
     return `
         <div style="text-align: center;">
@@ -151,7 +146,7 @@ function submitForm(action, filename, latitude, longitude, newLatitude, newLongi
 
     [['latitude', latitude], ['longitude', longitude], ['new_latitude', newLatitude], ['new_longitude', newLongitude]].forEach(([name, value]) => {
         if (value != null) {
-            const input = document.createElement('input');
+            let input = document.createElement('input');
             input.type = 'hidden';
             input.name = name;
             input.value = value;
@@ -169,21 +164,18 @@ function createNumberedIcon(number) {
     canvas.height = 24;
     let context = canvas.getContext('2d');
 
-    // Draw the base pin icon (simplified for demonstration)
     context.fillStyle = '#0c94ea'; // Blue color
     context.beginPath();
     context.arc(12, 12, 10, 0, Math.PI * 2, true);
     context.closePath();
     context.fill();
 
-    // Draw the number
     context.fillStyle = '#FFFFFF'; // White color
     context.font = '10px Arial';
     context.textAlign = 'center';
     context.textBaseline = 'middle';
     context.fillText(number, 12, 12);
 
-    // Create the icon
     return new L.Icon({
         iconUrl: canvas.toDataURL(),
         iconSize: [24, 24]
