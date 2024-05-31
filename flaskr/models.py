@@ -1,4 +1,4 @@
-﻿from sqlalchemy import Any, BLOB, Column, Integer, String
+﻿from sqlalchemy import BLOB, Column, Integer, String
 
 from flaskr.db import Base
 

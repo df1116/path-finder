@@ -2,6 +2,19 @@
 from flaskr.helper import is_valid_gpx_file, parse_gpx, standardise_gpx
 from flaskr.models import Gpx
 
+from gpxpy.gpx import GPX
+
+
+def create_gpx_file(name, profile):
+    """Creates a new GPX file and adds it to the database."""
+    gpx = GPX()
+    gpx.name = name
+
+    gpx_to_add = Gpx(name=f'{name}.gpx', profile=profile, data=gpx.to_xml().encode('utf-8'))
+
+    db_add(gpx_to_add)
+    db_commit()
+
 
 def upload_gpx_file(profile, file):
     """Upload a new GPX file to the database."""

@@ -72,6 +72,19 @@ def get_distances(locations, profile):
     return json.loads(response.text)['distances'][:-1]
 
 
+def process_set_start(gpx, _, longitude, latitude):
+    """Sets the start of a GPX instance."""
+    gpx.routes.append(GPXRoute())
+    gpx.routes[0].points.append(GPXWaypoint(longitude=longitude, latitude=latitude))
+
+
+def process_set_end(gpx, profile, longitude, latitude):
+    """Sets the end of a GPX instance."""
+    coordinates = [[gpx.routes[0].points[0].longitude, gpx.routes[0].points[0].latitude], [longitude, latitude]]
+    route_gpx = get_route(coordinates, profile)
+    gpx.routes[0] = route_gpx.routes[0]
+
+
 def process_add_point(gpx, profile, longitude, latitude):
     """Adds a point to a GPX instance."""
     coordinates = get_coordinates(gpx)
